@@ -4,6 +4,7 @@ import com.mao.mqdemo.jms.JmsConfig;
 import com.mao.mqdemo.jms.PayProducer;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
+import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.exception.RemotingException;
@@ -22,23 +23,41 @@ public class PayController {
     @Resource
     private PayProducer payProducer;
 
-    @RequestMapping("mqSend")
-    public SendResult mqSend(String msg) {
+    /**
+     * 同步发送mq
+     *
+     * @param msg
+     * @return
+     */
+    @RequestMapping("mqSendSync")
+    public SendResult mqSendSync(String msg) throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
         Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
 
-        SendResult sendResult = null;
-        try {
-            sendResult = payProducer.getProducer().send(message);
-        } catch (MQClientException e) {
-            e.printStackTrace();
-        } catch (RemotingException e) {
-            e.printStackTrace();
-        } catch (MQBrokerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        SendResult sendResult = payProducer.getProducer().send(message);
 
         return sendResult;
+    }
+
+    /**
+     * 异步发送mq：不会重试，发送总次数等于1
+     *
+     * @param msg
+     * @return
+     */
+    @RequestMapping("mqSendAsync")
+    public void mqSendAsync(String msg) throws RemotingException, MQClientException, InterruptedException {
+        Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
+
+        payProducer.getProducer().send(message, new SendCallback() {
+            @Override
+            public void onSuccess(SendResult sendResult) {
+                System.out.printf("发送结果=%s, msg=%s ", sendResult.getSendStatus(), sendResult.toString());
+            }
+
+            @Override
+            public void onException(Throwable throwable) {
+                //补偿机制，根据业务情况进行使用，看是否进行重试
+            }
+        });
     }
 }
