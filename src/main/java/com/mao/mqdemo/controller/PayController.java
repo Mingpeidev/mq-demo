@@ -23,8 +23,8 @@ public class PayController {
     private PayProducer payProducer;
 
     @RequestMapping("mqSend")
-    public SendResult mqSend() {
-        Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", "hello mq".getBytes());
+    public SendResult mqSend(String msg) {
+        Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
 
         SendResult sendResult = null;
         try {

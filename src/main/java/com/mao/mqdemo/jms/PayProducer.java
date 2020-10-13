@@ -21,6 +21,9 @@ public class PayProducer {
         //指定NameServer地址，多个地址以 ; 隔开
         //如 producer.setNamesrvAddr("192.168.100.141:9876;192.168.100.142:9876;192.168.100.149:9876");
 
+        //生产者投递消息重试次数
+        producer.setRetryTimesWhenSendFailed(3);
+
         producer.setNamesrvAddr(JmsConfig.NAME_SERVER);
 
         //启动
