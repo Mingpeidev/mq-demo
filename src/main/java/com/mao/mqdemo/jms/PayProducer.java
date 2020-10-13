@@ -11,9 +11,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class PayProducer {
-    private String producerGroup = "pay_group";
-
-    private String nameServerAddr = "192.168.31.15:9876";
+    private String producerGroup = "pay_producer_group";
 
     private DefaultMQProducer producer;
 
@@ -23,7 +21,7 @@ public class PayProducer {
         //指定NameServer地址，多个地址以 ; 隔开
         //如 producer.setNamesrvAddr("192.168.100.141:9876;192.168.100.142:9876;192.168.100.149:9876");
 
-        producer.setNamesrvAddr(nameServerAddr);
+        producer.setNamesrvAddr(JmsConfig.NAME_SERVER);
 
         //启动
         start();
@@ -47,7 +45,7 @@ public class PayProducer {
     /**
      * 一般在应用上下文，使用上下文监听器，进行关闭
      */
-    public void shutdown(){
+    public void shutdown() {
         this.producer.shutdown();
     }
 }

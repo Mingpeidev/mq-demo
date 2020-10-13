@@ -1,5 +1,6 @@
 package com.mao.mqdemo.controller;
 
+import com.mao.mqdemo.jms.JmsConfig;
 import com.mao.mqdemo.jms.PayProducer;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -21,11 +22,9 @@ public class PayController {
     @Resource
     private PayProducer payProducer;
 
-    private static final String topic = "mq_demo_pay_test_topic";
-
     @RequestMapping("mqSend")
-    public SendResult test() {
-        Message message = new Message(topic, "tag_a", "test111", "hello mq".getBytes());
+    public SendResult mqSend() {
+        Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", "hello mq".getBytes());
 
         SendResult sendResult = null;
         try {
