@@ -39,7 +39,14 @@ public class PayController {
     public SendResult mqSendSync(String msg) throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
         Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
 
+        //延迟消息
+        //1表示配置里面的第一个级别，2表示第二个级别
+        //"1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h"
+        message.setDelayTimeLevel(3);
+
         SendResult sendResult = payProducer.getProducer().send(message);
+
+        System.out.println("发送成功" + sendResult.toString());
 
         return sendResult;
     }
