@@ -25,9 +25,15 @@ public class PayController {
 
     /**
      * 同步发送mq
+     * <p>
+     * 有发送结果反馈，数据可靠。用于重要信息发送，如邮件、报名短信等。
      *
      * @param msg
      * @return
+     * @throws InterruptedException
+     * @throws RemotingException
+     * @throws MQClientException
+     * @throws MQBrokerException
      */
     @RequestMapping("mqSendSync")
     public SendResult mqSendSync(String msg) throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
@@ -40,9 +46,13 @@ public class PayController {
 
     /**
      * 异步发送mq：不会重试，发送总次数等于1
+     * <p>
+     * 有发送结果反馈，数据可靠。对RT时间敏感，可以支持更高的并发，回调成功后触发对应业务，用于如注册成功后通知积分系统发放优惠券。
      *
      * @param msg
-     * @return
+     * @throws RemotingException
+     * @throws MQClientException
+     * @throws InterruptedException
      */
     @RequestMapping("mqSendAsync")
     public void mqSendAsync(String msg) throws RemotingException, MQClientException, InterruptedException {
@@ -59,5 +69,23 @@ public class PayController {
                 //补偿机制，根据业务情况进行使用，看是否进行重试
             }
         });
+    }
+
+    /**
+     * One-way方式发送
+     * <p>
+     * 无需等待响应，无发送结果反馈，数据可能丢失。主要用于日志收集，适用于某些耗时非常短，但对可靠性要求并不高的场景，也就是LogServer
+     * 只负责发送消息，不等待服务器回应且无回调函数触发，即只发送请求不等待应答。
+     *
+     * @param msg
+     * @throws RemotingException
+     * @throws MQClientException
+     * @throws InterruptedException
+     */
+    @RequestMapping("mqSendOneWay")
+    public void mqSendOneWay(String msg) throws RemotingException, MQClientException, InterruptedException {
+        Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
+
+        payProducer.getProducer().sendOneway(message);
     }
 }
