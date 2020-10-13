@@ -4,14 +4,17 @@ import com.mao.mqdemo.jms.JmsConfig;
 import com.mao.mqdemo.jms.PayProducer;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
+import org.apache.rocketmq.client.producer.MessageQueueSelector;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Mingpeidev
@@ -94,5 +97,49 @@ public class PayController {
         Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
 
         payProducer.getProducer().sendOneway(message);
+    }
+
+    /**
+     * 将消息投递到指定queue arg是queue下标
+     *
+     * @param msg
+     * @throws InterruptedException
+     * @throws RemotingException
+     * @throws MQClientException
+     * @throws MQBrokerException
+     */
+    @RequestMapping("mqSendToQueue")
+    public void mqSendToQueue(String msg) throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
+        Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
+
+        //同步发送指定queue 0
+        /*SendResult sendResult = payProducer.getProducer().send(message, new MessageQueueSelector() {
+            @Override
+            public MessageQueue select(List<MessageQueue> list, Message message, Object o) {
+                int queueNum = Integer.valueOf(o.toString());
+                return list.get(queueNum);
+            }
+        }, 0);
+
+        System.out.printf("发送结果=%s, msg=%s ", sendResult.getSendStatus(), sendResult.toString());*/
+
+        //异步发送指定queue 1
+        payProducer.getProducer().send(message, new MessageQueueSelector() {
+            @Override
+            public MessageQueue select(List<MessageQueue> list, Message message, Object o) {
+                int queueNum = Integer.valueOf(o.toString());
+                return list.get(queueNum);
+            }
+        }, 1, new SendCallback() {
+            @Override
+            public void onSuccess(SendResult sendResult) {
+                System.out.printf("发送结果=%s, msg=%s ", sendResult.getSendStatus(), sendResult.toString());
+            }
+
+            @Override
+            public void onException(Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        });
     }
 }
