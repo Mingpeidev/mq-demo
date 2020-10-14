@@ -2,6 +2,7 @@ package com.mao.mqdemo.controller;
 
 import com.mao.mqdemo.jms.JmsConfig;
 import com.mao.mqdemo.jms.PayProducer;
+import com.mao.mqdemo.pojo.ProductOrder;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.MessageQueueSelector;
@@ -22,6 +23,7 @@ import java.util.List;
  * @description
  */
 @RestController
+@RequestMapping("/mqSend")
 public class PayController {
     @Resource
     private PayProducer payProducer;
@@ -38,7 +40,7 @@ public class PayController {
      * @throws MQClientException
      * @throws MQBrokerException
      */
-    @RequestMapping("mqSendSync")
+    @RequestMapping("sync")
     public SendResult mqSendSync(String msg) throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
         Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
 
@@ -64,7 +66,7 @@ public class PayController {
      * @throws MQClientException
      * @throws InterruptedException
      */
-    @RequestMapping("mqSendAsync")
+    @RequestMapping("async")
     public void mqSendAsync(String msg) throws RemotingException, MQClientException, InterruptedException {
         Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
 
@@ -92,7 +94,7 @@ public class PayController {
      * @throws MQClientException
      * @throws InterruptedException
      */
-    @RequestMapping("mqSendOneWay")
+    @RequestMapping("oneWay")
     public void mqSendOneWay(String msg) throws RemotingException, MQClientException, InterruptedException {
         Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
 
@@ -108,7 +110,7 @@ public class PayController {
      * @throws MQClientException
      * @throws MQBrokerException
      */
-    @RequestMapping("mqSendToQueue")
+    @RequestMapping("toQueue")
     public void mqSendToQueue(String msg) throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
         Message message = new Message(JmsConfig.TOPIC, "tag_a", "test111", ("hello mq " + msg).getBytes());
 
@@ -141,5 +143,40 @@ public class PayController {
                 throwable.printStackTrace();
             }
         });
+    }
+
+    /**
+     * 顺序消息实现
+     *
+     * @throws InterruptedException
+     * @throws RemotingException
+     * @throws MQClientException
+     * @throws MQBrokerException
+     */
+    @RequestMapping("orderMsg")
+    public void orderMsg() throws InterruptedException, RemotingException, MQClientException, MQBrokerException {
+        List<ProductOrder> productOrderList = ProductOrder.getOrderList();
+
+        for (int i = 0; i < productOrderList.size(); i++) {
+            ProductOrder productOrder = productOrderList.get(i);
+
+            //发送消息
+            Message msg = new Message(JmsConfig.ORDERLY_TOPIC, "",
+                    productOrder.getOrderId() + "", productOrder.toString().getBytes());
+
+            //同一个订单号发送到同一个queue
+            SendResult sendResult = payProducer.getProducer().send(msg, new MessageQueueSelector() {
+                @Override
+                public MessageQueue select(List<MessageQueue> list, Message message, Object o) {
+                    long id = (Long) o;
+                    int index = (int) (id % list.size());
+
+                    return list.get(index);
+                }
+            }, productOrder.getOrderId());
+
+            System.out.printf("发送结果=%s, sendResult=%s ,order_id=%s, type=%s\n", sendResult.getSendStatus(),
+                    sendResult.toString(), productOrder.getOrderId(), productOrder.getType());
+        }
     }
 }

@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * @author Mingpeidev
  * @date 2020/10/13 9:29
- * @description mq消费者, 当消息体为reSend时可以测试重试机制
+ * @description mq消费者, 当消息体为reSend时可以测试重试机制。监听 mq_demo_pay_test_topic
  */
 @Component
 public class PayConsumer {
@@ -74,7 +74,7 @@ public class PayConsumer {
         });
 
         consumer.start();
-        System.out.println("consumer start ... ");
+        System.out.println("consumer mq_demo_pay_test_topic start ...");
     }
 
 }
