@@ -33,13 +33,13 @@ public class PayConsumer {
         //默认是集群方式，可以更改为广播，但是广播方式不支持重试
         consumer.setMessageModel(MessageModel.CLUSTERING);
         //1.监听所有Tag标签
-        //consumer.subscribe(JmsConfig.TOPIC, "*");
+        consumer.subscribe(JmsConfig.TOPIC, "*");
 
         //2.多标签订阅
         //consumer.subscribe(JmsConfig.TOPIC, "tag_a||tag_b||tag_c");
 
         //3.根据SQL92语法进行过滤消息
-        consumer.subscribe(JmsConfig.TOPIC, MessageSelector.bySql("amount>5"));
+        //consumer.subscribe(JmsConfig.TOPIC, MessageSelector.bySql("amount>5"));
 
         //消费逻辑
         consumer.registerMessageListener(new MessageListenerConcurrently() {
