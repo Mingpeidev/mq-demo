@@ -1,7 +1,7 @@
 rocketMQ
 
 url:
-http://localhost:8080/mqSend/sync?msg=reSend                        同步发送重试(SYNC)--延时10s
+http://localhost:8080/mqSend/sync?msg=reSend                        同步发送重试(SYNC)--延时10s,可支持SQL92过滤
 http://localhost:8080/mqSend/async?msg=reSend                       异步发送重试(ASYNC)
 http://localhost:8080/mqSend/oneWay?msg=reSend                      One-way发送重试
 

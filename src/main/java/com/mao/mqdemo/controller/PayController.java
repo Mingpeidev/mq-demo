@@ -53,6 +53,9 @@ public class PayController {
         //"1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h"
         message.setDelayTimeLevel(3);
 
+        //根据sql语法进行过滤消息 设置amount>5时消费
+        message.putUserProperty("amount", "1");
+
         SendResult sendResult = payProducer.getProducer().send(message);
 
         System.out.println("发送成功" + sendResult.toString());
@@ -187,8 +190,8 @@ public class PayController {
     /**
      * 分布式事务消息发送实例
      *
-     * @param tag               信息主体
-     * @param otherParam        传入executeLocalTransaction的Object，程序进行判断1提交，2回滚，3走checkLocalTransaction
+     * @param tag        信息主体
+     * @param otherParam 传入executeLocalTransaction的Object，程序进行判断1提交，2回滚，3走checkLocalTransaction
      * @return
      * @throws MQClientException
      */
