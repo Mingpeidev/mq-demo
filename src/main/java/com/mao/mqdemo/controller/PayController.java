@@ -2,6 +2,7 @@ package com.mao.mqdemo.controller;
 
 import com.mao.mqdemo.jms.JmsConfig;
 import com.mao.mqdemo.jms.PayProducer;
+import com.mao.mqdemo.jms.TransactionProducer;
 import com.mao.mqdemo.pojo.ProductOrder;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -27,6 +28,9 @@ import java.util.List;
 public class PayController {
     @Resource
     private PayProducer payProducer;
+
+    @Resource
+    private TransactionProducer transactionProducer;
 
     /**
      * 同步发送mq
@@ -178,5 +182,24 @@ public class PayController {
             System.out.printf("发送结果=%s, sendResult=%s ,order_id=%s, type=%s\n", sendResult.getSendStatus(),
                     sendResult.toString(), productOrder.getOrderId(), productOrder.getType());
         }
+    }
+
+    /**
+     * 分布式事务消息发送实例
+     *
+     * @param tag               信息主体
+     * @param otherParam        传入executeLocalTransaction的Object，程序进行判断1提交，2回滚，3走checkLocalTransaction
+     * @return
+     * @throws MQClientException
+     */
+    @RequestMapping("trans")
+    public SendResult trans(String tag, String otherParam) throws MQClientException {
+        Message message = new Message(JmsConfig.TOPIC, tag, tag + "_key", tag.getBytes());
+
+        SendResult sendResult = transactionProducer.getProducer().sendMessageInTransaction(message, otherParam);
+
+        System.out.printf("发送结果=%s, sendResult=%s \n", sendResult.getSendStatus(), sendResult.toString());
+
+        return sendResult;
     }
 }
